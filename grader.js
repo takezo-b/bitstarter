@@ -68,9 +68,9 @@ var checkUrlFile = function(url_name, checksfile) {
 
     rest.get(url_name).on('complete', function(result) {
       if (result instanceof Error) {
-	  return;
+        return;
       } else {
-	$ = cheerio.load(result);
+        $ = cheerio.load(result);
         var checks = loadChecks(checksfile).sort();
         for(var ii in checks) {
           var present = $(checks[ii]).length > 0;
@@ -78,7 +78,7 @@ var checkUrlFile = function(url_name, checksfile) {
         }
         var outJson = JSON.stringify(out, null, 4);
         console.log(outJson);
-	return;
+        return;
       }
     });
 };
