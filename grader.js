@@ -19,6 +19,13 @@ References:
    - http://en.wikipedia.org/wiki/JSON
    - https://developer.mozilla.org/en-US/docs/JSON
    - https://developer.mozilla.org/en-US/docs/JSON#JSON_in_Firefox_2
+
+
+Usage
+  $ ./grader.js --checks checks.json --file index.html
+  $ ./grader.js --checks checks.json --url http://localhost:5000/
+  $ ./grader.js --checks checks.json --url http://secure-hollows-1206.herokuapp.com/
+
 */
 
 var fs = require('fs');
@@ -55,6 +62,27 @@ var checkHtmlFile = function(htmlfile, checksfile) {
     return out;
 };
 
+var checkUrlFile = function(url_name, checksfile) {
+    var out = {};
+    var rest = require('restler');
+
+    rest.get(url_name).on('complete', function(result) {
+      if (result instanceof Error) {
+	  return;
+      } else {
+	$ = cheerio.load(result);
+        var checks = loadChecks(checksfile).sort();
+        for(var ii in checks) {
+          var present = $(checks[ii]).length > 0;
+          out[checks[ii]] = present;
+        }
+        var outJson = JSON.stringify(out, null, 4);
+        console.log(outJson);
+	return;
+      }
+    });
+};
+
 var clone = function(fn) {
     // Workaround for commander.js issue.
     // http://stackoverflow.com/a/6772648
@@ -64,11 +92,18 @@ var clone = function(fn) {
 if(require.main == module) {
     program
         .option('-c, --checks <check_file>', 'Path to checks.json', clone(assertFileExists), CHECKSFILE_DEFAULT)
-        .option('-f, --file <html_file>', 'Path to index.html', clone(assertFileExists), HTMLFILE_DEFAULT)
+        .option('-f, --file <html_file>', 'Path to index.html')
+        .option('-u, --url <url_name>', 'URL to index.html')
         .parse(process.argv);
-    var checkJson = checkHtmlFile(program.file, program.checks);
-    var outJson = JSON.stringify(checkJson, null, 4);
-    console.log(outJson);
+
+    if (program.file != null) {
+      var checkJson = checkHtmlFile(program.file, program.checks);
+      var outJson = JSON.stringify(checkJson, null, 4);
+      console.log(outJson);
+    }
+    if (program.url != null) {
+     checkUrlFile(program.url, program.checks);
+    }
 } else {
     exports.checkHtmlFile = checkHtmlFile;
 }
